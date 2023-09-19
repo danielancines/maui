@@ -72,6 +72,8 @@ namespace Microsoft.Maui.Controls
 			var groups = (VisualStateGroupList)visualElement.GetValue(VisualStateGroupsProperty);
 			var context = visualElement.GetContext(VisualStateGroupsProperty);
 			var vsgSpecificity = context.Values.Keys.Last();
+			if (vsgSpecificity == SetterSpecificity.DefaultValue)
+				vsgSpecificity = new SetterSpecificity();
 			groups.Specificity = vsgSpecificity;
 			var specificity = new SetterSpecificity(1, 0, 0, 0, vsgSpecificity.Style, vsgSpecificity.Id, vsgSpecificity.Class, vsgSpecificity.Type);
 
@@ -482,6 +484,9 @@ namespace Microsoft.Maui.Controls
 				clone.States.Add(state.Clone());
 			}
 
+			if (DebuggerHelper.DebuggerIsAttached && VisualDiagnostics.GetSourceInfo(this) is SourceInfo info)
+				VisualDiagnostics.RegisterSourceInfo(clone, info.SourceUri, info.LineNumber, info.LinePosition);
+
 			return clone;
 		}
 
@@ -593,6 +598,9 @@ namespace Microsoft.Maui.Controls
 				clone.StateTriggers.Add(stateTrigger);
 			}
 
+			if (DebuggerHelper.DebuggerIsAttached && VisualDiagnostics.GetSourceInfo(this) is SourceInfo info)
+				VisualDiagnostics.RegisterSourceInfo(clone, info.SourceUri, info.LineNumber, info.LinePosition);
+
 			return clone;
 		}
 
@@ -649,15 +657,18 @@ namespace Microsoft.Maui.Controls
 	{
 		internal static IList<VisualStateGroup> Clone(this IList<VisualStateGroup> groups)
 		{
-			var actual = new VisualStateGroupList();
+			var clone = new VisualStateGroupList();
 
 			foreach (var group in groups)
 			{
-				group.VisualElement = actual.VisualElement;
-				actual.Add(group.Clone());
+				group.VisualElement = clone.VisualElement;
+				clone.Add(group.Clone());
 			}
 
-			return actual;
+			if (DebuggerHelper.DebuggerIsAttached && VisualDiagnostics.GetSourceInfo(groups) is SourceInfo info)
+				VisualDiagnostics.RegisterSourceInfo(clone, info.SourceUri, info.LineNumber, info.LinePosition);
+
+			return clone;
 		}
 
 		internal static bool HasVisualState(this VisualElement element, string name)
