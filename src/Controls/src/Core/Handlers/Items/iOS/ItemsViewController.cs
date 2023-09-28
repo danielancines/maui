@@ -29,6 +29,8 @@ namespace Microsoft.Maui.Controls.Handlers.Items
 		bool _emptyViewDisplayed;
 		bool _disposed;
 
+		CGSize _previousContentSize = CGSize.Empty;
+
 		UIView _emptyUIView;
 		VisualElement _emptyViewFormsElement;
 		Dictionary<object, TemplatedCell> _measurementCells = new Dictionary<object, TemplatedCell>();
@@ -173,7 +175,70 @@ namespace Microsoft.Maui.Controls.Handlers.Items
 		{
 			ConstrainToItemsView();
 			base.ViewWillLayoutSubviews();
+			InvalidateMeasureIfContentSizeChanged();
 			LayoutEmptyView();
+		}
+
+		void InvalidateMeasureIfContentSizeChanged()
+		{
+			var contentSize = CollectionView?.CollectionViewLayout?.CollectionViewContentSize;
+
+			if (!contentSize.HasValue)
+			{
+				return;
+			}
+
+			bool widthChanged = _previousContentSize.Width != contentSize.Value.Width;
+			bool heightChanged = _previousContentSize.Height != contentSize.Value.Height;
+
+			if (_initialized && (widthChanged || heightChanged))
+			{
+				var screenFrame = CollectionView?.Window?.Frame;
+
+				if (!screenFrame.HasValue)
+				{
+					return;
+				}
+
+				var screenWidth = screenFrame.Value.Width;
+				var screenHeight = screenFrame.Value.Height;
+				bool invalidate = false;
+
+				// If both the previous content size and the current content size are larger
+				// than the screen size, then we know that we're already maxed out and the 
+				// CollectionView items are scrollable. There's no reason to force an invalidation
+				// of the CollectionView to expand/contract it.
+
+				// If either size is smaller than that, we need to invalidate to ensure that the 
+				// CollectionView is re-measured and set to the correct size.
+
+				if (widthChanged && (contentSize.Value.Width < screenWidth || _previousContentSize.Width < screenWidth))
+				{
+					invalidate = true;
+				}
+
+				if (heightChanged && (contentSize.Value.Height < screenHeight || _previousContentSize.Height < screenHeight))
+				{
+					invalidate = true;
+				}
+
+				if (invalidate)
+				{
+					(ItemsView as IView)?.InvalidateMeasure();
+				}
+			}
+
+			_previousContentSize = contentSize.Value;
+		}
+
+		internal Size? GetSize()
+		{
+			if (_emptyViewDisplayed)
+			{
+				return _emptyUIView.Frame.Size.ToSize();
+			}
+
+			return CollectionView.CollectionViewLayout.CollectionViewContentSize.ToSize();
 		}
 
 		void ConstrainToItemsView()
@@ -226,8 +291,11 @@ namespace Microsoft.Maui.Controls.Handlers.Items
 			ItemsViewLayout?.ClearCellSizeCache();
 			ItemsSource?.Dispose();
 			ItemsSource = CreateItemsViewSource();
+
 			CollectionView.ReloadData();
 			CollectionView.CollectionViewLayout.InvalidateLayout();
+
+			(ItemsView as IView)?.InvalidateMeasure();
 		}
 
 		public virtual void UpdateFlowDirection()
@@ -241,6 +309,7 @@ namespace Microsoft.Maui.Controls.Handlers.Items
 
 			Layout.InvalidateLayout();
 		}
+
 
 		public override nint NumberOfSections(UICollectionView collectionView)
 		{
