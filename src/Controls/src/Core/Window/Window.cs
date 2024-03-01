@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -339,6 +337,8 @@ namespace Microsoft.Maui.Controls
 					return;
 
 				_isActivated = value;
+
+				System.Diagnostics.Debug.WriteLine($"{this.GetHashCode()}:{this.GetType()} - IsActivated: {IsActivated}");
 
 				if (value)
 					SendWindowAppearing();
