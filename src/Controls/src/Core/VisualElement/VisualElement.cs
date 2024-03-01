@@ -279,13 +279,15 @@ namespace Microsoft.Maui.Controls
 		public static readonly BindableProperty BackgroundProperty = BindableProperty.Create(nameof(Background), typeof(Brush), typeof(VisualElement), Brush.Default,
 			propertyChanging: (bindable, oldvalue, newvalue) =>
 			{
-				if (oldvalue != null)
-					(bindable as VisualElement)?.StopNotifyingBackgroundChanges();
+				if (oldvalue == null) return;
+
+				(bindable as VisualElement)?.StopNotifyingBackgroundChanges();
 			},
 			propertyChanged: (bindable, oldvalue, newvalue) =>
 			{
-				if (newvalue != null)
-					(bindable as VisualElement)?.NotifyBackgroundChanges();
+				if (newvalue == null) return;
+
+				(bindable as VisualElement)?.NotifyBackgroundChanges();
 			});
 
 		WeakBackgroundChangedProxy _backgroundProxy;
@@ -294,6 +296,9 @@ namespace Microsoft.Maui.Controls
 		WeakNotifyPropertyChangedProxy _shadowProxy = null;
 		PropertyChangedEventHandler _shadowChanged;
 
+		/// <summary>
+		/// Frees all resources associated with the handle.
+		/// </summary>
 		~VisualElement()
 		{
 			_clipProxy?.Unsubscribe();
@@ -313,6 +318,9 @@ namespace Microsoft.Maui.Controls
 				_backgroundChanged ??= (sender, e) => OnPropertyChanged(nameof(Background));
 				_backgroundProxy ??= new();
 				_backgroundProxy.Subscribe(background, _backgroundChanged);
+							
+				OnParentResourcesChanged(this.GetMergedResources());
+				((IElementDefinition)this).AddResourcesChangedListener(background.OnParentResourcesChanged);
 			}
 		}
 
@@ -324,6 +332,8 @@ namespace Microsoft.Maui.Controls
 
 			if (background != null)
 			{
+				((IElementDefinition)this).RemoveResourcesChangedListener(background.OnParentResourcesChanged);
+
 				SetInheritedBindingContext(background, null);
 				_backgroundProxy?.Unsubscribe();
 			}
@@ -1222,6 +1232,9 @@ namespace Microsoft.Maui.Controls
 		/// </summary>
 		protected virtual void InvalidateMeasure() => InvalidateMeasureInternal(InvalidationTrigger.MeasureChanged);
 
+		/// <summary>
+		/// Invoked when the binding context of this element has changed.
+		/// </summary>
 		protected override void OnBindingContextChanged()
 		{
 			PropagateBindingContextToStateTriggers();
@@ -1231,6 +1244,10 @@ namespace Microsoft.Maui.Controls
 			base.OnBindingContextChanged();
 		}
 
+		/// <summary>
+		/// Invoked when a child object is added to this element.
+		/// </summary>
+		/// <param name="child">The child object that is added to this element.</param>
 		protected override void OnChildAdded(Element child)
 		{
 			base.OnChildAdded(child);
@@ -1238,15 +1255,24 @@ namespace Microsoft.Maui.Controls
 			var view = child as View;
 
 			if (view != null)
+			{
 				ComputeConstraintForView(view);
+			}
 		}
 
+		/// <summary>
+		/// Invoked when a child object is removed from this element.
+		/// </summary>
+		/// <param name="child">The child element that is removed from this element.</param>
+		/// <param name="oldLogicalIndex">The logical index <paramref name="child"/> previously had within this element.</param>
 		protected override void OnChildRemoved(Element child, int oldLogicalIndex)
 		{
 			base.OnChildRemoved(child, oldLogicalIndex);
 
 			if (child is View view)
+			{
 				view.ComputedConstraint = LayoutConstraint.None;
+			}
 		}
 
 		/// <summary>
@@ -1310,6 +1336,10 @@ namespace Microsoft.Maui.Controls
 
 		internal virtual void ComputeConstraintForView(View view) => view.ComputedConstraint = LayoutConstraint.None;
 
+		/// <summary>
+		/// Occurs when a focus change is requested.
+		/// </summary>
+		/// <remarks>For internal use only. This API can be changed or removed without notice at any time.</remarks>
 		[Obsolete("This is now handled through VisualElement.MapFocus, this event handler will be removed in the future.")]
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public event EventHandler<FocusRequestArgs> FocusChangeRequested;
@@ -1847,7 +1877,8 @@ namespace Microsoft.Maui.Controls
 		/// <inheritdoc/>
 		Size IView.Measure(double widthConstraint, double heightConstraint)
 		{
-			return MeasureOverride(widthConstraint, heightConstraint);
+			DesiredSize = MeasureOverride(widthConstraint, heightConstraint);
+			return DesiredSize;
 		}
 
 		/// <summary>
@@ -1859,8 +1890,7 @@ namespace Microsoft.Maui.Controls
 		/// <returns>The requested size that an element wants in order to be displayed on the device.</returns>
 		protected virtual Size MeasureOverride(double widthConstraint, double heightConstraint)
 		{
-			DesiredSize = this.ComputeDesiredSize(widthConstraint, heightConstraint);
-			return DesiredSize;
+			return this.ComputeDesiredSize(widthConstraint, heightConstraint);
 		}
 
 		/// <inheritdoc/>
@@ -2042,6 +2072,9 @@ namespace Microsoft.Maui.Controls
 				_shadowChanged ??= (sender, e) => OnPropertyChanged(nameof(Shadow));
 				_shadowProxy ??= new();
 				_shadowProxy.Subscribe(shadow, _shadowChanged);
+
+				OnParentResourcesChanged(this.GetMergedResources());
+				((IElementDefinition)this).AddResourcesChangedListener(shadow.OnParentResourcesChanged);
 			}
 		}
 
@@ -2051,6 +2084,8 @@ namespace Microsoft.Maui.Controls
 
 			if (shadow is not null)
 			{
+				((IElementDefinition)this).RemoveResourcesChangedListener(shadow.OnParentResourcesChanged);
+
 				SetInheritedBindingContext(shadow, null);
 				_shadowProxy?.Unsubscribe();
 			}
@@ -2263,6 +2298,7 @@ namespace Microsoft.Maui.Controls
 
 			public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
 			{
+				// IMPORTANT! Update VisibilityDesignTypeConverter.IsValid if making changes here
 				var strValue = value?.ToString()?.Trim();
 
 				if (!string.IsNullOrEmpty(strValue))

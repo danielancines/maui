@@ -27,6 +27,7 @@ namespace Microsoft.Maui.AppiumTests
 		}
 
 		[Test]
+		[Category(UITestCategories.Gestures)]
 		public void DragEvents()
 		{
 			App.WaitForElement("TargetView");
@@ -51,12 +52,14 @@ namespace Microsoft.Maui.AppiumTests
 		}
 
 		[Test]
+		[Category(UITestCategories.Gestures)]
 		public void DragAndDropBetweenLayouts()
 		{
 			App.WaitForElement("TargetView");
 			App.EnterText("TargetView", "DragAndDropBetweenLayouts");
 			App.Click("GoButton");
 
+			App.WaitForElement("ResetButton");
 			App.Click("ResetButton");
 
 			App.WaitForElement("Red");
@@ -79,6 +82,7 @@ namespace Microsoft.Maui.AppiumTests
 		}
 
 		[Test]
+		[Category(UITestCategories.Gestures)]
 		public void PlatformDragEventArgs()
 		{
 			App.WaitForElement("TargetView");
@@ -163,6 +167,7 @@ namespace Microsoft.Maui.AppiumTests
 		}
 
 		[Test]
+		[Category(UITestCategories.Gestures)]
 		public void DragStartEventCoordinates()
 		{
 			App.WaitForElement("TargetView");
@@ -196,6 +201,7 @@ namespace Microsoft.Maui.AppiumTests
 		}
 
 		[Test]
+		[Category(UITestCategories.Gestures)]
 		public void DragEventCoordinates()
 		{
 			App.WaitForElement("TargetView");
@@ -234,6 +240,7 @@ namespace Microsoft.Maui.AppiumTests
 		}
 
 		[Test]
+		[Category(UITestCategories.Gestures)]
 		public void DropEventCoordinates()
 		{
 			App.WaitForElement("TargetView");

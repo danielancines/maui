@@ -5,7 +5,7 @@ using UITest.Core;
 
 namespace UITest.Appium
 {
-	public abstract class AppiumApp : IApp, IScreenshotSupportedApp
+	public abstract class AppiumApp : IApp, IScreenshotSupportedApp, ILogsSupportedApp
 	{
 		protected readonly AppiumDriver _driver;
 		protected readonly IConfig _config;
@@ -47,6 +47,20 @@ namespace UITest.Appium
 		{
 			Screenshot screenshot = _driver.GetScreenshot();
 			return screenshot.AsByteArray;
+		}
+
+		public IEnumerable<string> GetLogTypes()
+		{
+			return _driver.Manage().Logs.AvailableLogTypes;
+		}
+
+		public IEnumerable<string> GetLogEntries(string logType)
+		{
+			var entries = _driver.Manage().Logs.GetLog(logType);
+			foreach (var entry in entries)
+			{
+				yield return entry.Message;
+			}
 		}
 
 #nullable disable
@@ -98,6 +112,9 @@ namespace UITest.Appium
 
 			if (config.GetProperty<bool>("FullReset"))
 				appiumOptions.AddAdditionalAppiumOption(MobileCapabilityType.FullReset, "true");
+
+			if (config.GetProperty<bool>("NoReset"))
+				appiumOptions.AddAdditionalAppiumOption(MobileCapabilityType.NoReset, "true");
 
 			var appPath = config.GetProperty<string>("AppPath");
 			if (!string.IsNullOrEmpty(appPath))

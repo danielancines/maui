@@ -42,6 +42,7 @@ public class MemoryTests : ControlsHandlerTestBase
 				handlers.AddHandler<IndicatorView, IndicatorViewHandler>();
 				handlers.AddHandler<RefreshView, RefreshViewHandler>();
 				handlers.AddHandler<IScrollView, ScrollViewHandler>();
+				handlers.AddHandler<SearchBar, SearchBarHandler>();
 				handlers.AddHandler<Slider, SliderHandler>();
 				handlers.AddHandler<Stepper, StepperHandler>();
 				handlers.AddHandler<SwipeView, SwipeViewHandler>();
@@ -74,6 +75,7 @@ public class MemoryTests : ControlsHandlerTestBase
 	[InlineData(typeof(Polyline))]
 	[InlineData(typeof(RefreshView))]
 	[InlineData(typeof(ScrollView))]
+	[InlineData(typeof(SearchBar))]
 	[InlineData(typeof(Slider))]
 	[InlineData(typeof(Stepper))]
 	[InlineData(typeof(SwipeView))]
@@ -129,9 +131,6 @@ public class MemoryTests : ControlsHandlerTestBase
 		});
 
 		await AssertionExtensions.WaitForGC(viewReference, handlerReference, platformViewReference);
-		Assert.False(viewReference.IsAlive, $"{type} should not be alive!");
-		Assert.False(handlerReference.IsAlive, "Handler should not be alive!");
-		Assert.False(platformViewReference.IsAlive, "PlatformView should not be alive!");
 	}
 
 #if IOS
@@ -151,8 +150,6 @@ public class MemoryTests : ControlsHandlerTestBase
 		});
 
 		await AssertionExtensions.WaitForGC(viewReference, recognizerReference);
-		Assert.False(viewReference.IsAlive, "UIView should not be alive!");
-		Assert.False(recognizerReference.IsAlive, "ResignFirstResponderTouchGestureRecognizer should not be alive!");
 	}
 #endif
 }
