@@ -10,7 +10,11 @@ namespace Maui.Controls.Sample
 		public static MauiApp CreateMauiApp() =>
 			MauiApp
 				.CreateBuilder()
-				//.UseMauiMaps()
+				.ConfigureMauiHandlers(handlers =>
+				{
+					handlers.AddHandler<MyWindow, MyWindowHandler>();
+				})
+				.UseMauiMaps()
 				.UseMauiApp<App>()
 				.Build();
 	}
