@@ -55,7 +55,7 @@ namespace UITest.Appium
 				return CommandResponse.FailedEmptyResponse;
 
 			if (_app.GetTestDevice() == TestDevice.Mac)
-			{	
+			{
 				_app.Driver.ExecuteScript("macos: activateApp", new Dictionary<string, object>
 				{
 					{ "bundleId", _app.GetAppId() },
@@ -67,7 +67,7 @@ namespace UITest.Appium
 				_app.Driver.LaunchApp();
 #pragma warning restore CS0618 // Type or member is obsolete
 			}
-			else 
+			else
 			{
 				_app.Driver.ActivateApp(_app.GetAppId());
 			}
@@ -128,7 +128,7 @@ namespace UITest.Appium
 			catch (Exception)
 			{
 				// TODO Pass in logger so we can log these exceptions
-				
+
 				// Occasionally the app seems to get so locked up it can't 
 				// even report back the appstate. In that case, we'll just
 				// try to trigger a reset.
@@ -145,9 +145,9 @@ namespace UITest.Appium
 				}
 				else if (_app.GetTestDevice() == TestDevice.Windows)
 				{
-	#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
 					_app.Driver.CloseApp();
-	#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618 // Type or member is obsolete
 				}
 				else
 				{
