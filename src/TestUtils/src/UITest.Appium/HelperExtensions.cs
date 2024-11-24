@@ -1657,6 +1657,41 @@ namespace UITest.Appium
 			throw new InvalidOperationException($"Could not get the performance data");
 		}
 
+		/// <summary>
+		/// Navigates back in the application by simulating a tap on the platform-specific back navigation button.
+		/// </summary>
+		/// <param name="app">The IApp instance representing the main gateway to interact with the application.</param>
+		/// <param name="customBackButtonIdentifier">Optional. The custom identifier for the back button. If not provided, default platform-specific identifiers will be used.</param>
+		public static void TapBackArrow(this IApp app, string customBackButtonIdentifier = "")
+		{
+			switch (app)
+			{
+				case AppiumAndroidApp _:
+					app.Tap(AppiumQuery.ByXPath(string.IsNullOrEmpty(customBackButtonIdentifier)
+						? "//android.widget.ImageButton[@content-desc='Navigate up']"
+						: $"//android.widget.ImageButton[@content-desc='{customBackButtonIdentifier}']"));
+					break;
+
+				case AppiumIOSApp _:
+				case AppiumCatalystApp _:
+					if (string.IsNullOrEmpty(customBackButtonIdentifier))
+					{
+						app.Tap(AppiumQuery.ByAccessibilityId("Back"));
+					}
+					else
+					{
+						app.Tap(app is AppiumIOSApp
+							? AppiumQuery.ByXPath($"//XCUIElementTypeButton[@name='{customBackButtonIdentifier}']")
+							: AppiumQuery.ByName(customBackButtonIdentifier));
+					}
+					break;
+
+				case AppiumWindowsApp _:
+					app.Tap(AppiumQuery.ByAccessibilityId("NavigationViewBackButton"));
+					break;
+			}
+		}
+
 		static IUIElement Wait(Func<IUIElement?> query,
 			Func<IUIElement?, bool> satisfactory,
 			string? timeoutMessage = null,
