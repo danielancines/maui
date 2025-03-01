@@ -73,6 +73,11 @@ namespace Microsoft.Maui.Controls.Handlers.Items
 			}
 		}
 
+		internal virtual void Disconnect()
+		{
+			DisposeItemsSource();
+		}
+
 		protected override void Dispose(bool disposing)
 		{
 			if (_disposed)
@@ -265,7 +270,7 @@ namespace Microsoft.Maui.Controls.Handlers.Items
 		}
 
 
-		internal Size? GetSize()
+		internal virtual Size? GetSize()
 		{
 			if (_emptyViewDisplayed)
 			{
@@ -573,7 +578,6 @@ namespace Microsoft.Maui.Controls.Handlers.Items
 				{
 					//Platform.GetRenderer(formsElement)?.DisposeRendererAndChildren();
 				}
-
 
 				uiView?.Dispose();
 				uiView = null;
